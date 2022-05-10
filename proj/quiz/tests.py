@@ -1,5 +1,7 @@
 from django.test import TestCase
-from .models import *
+from .models import Quiz, Question
+import random
+
 
 def random_string(limit=10, prefix=None):
     res = ''.join([random.choice(string.ascii_lowercase) for _ in range(limit)])
@@ -39,7 +41,7 @@ class QuizTest(TestCase):
         answer = random_num_int(1)%4+1
         question_id = quiz.add_question(question_1, answers_1, answer_1)
         question_pos = Question.objects.get(pk=question_id).pos
-        quiz.remove_question(question_pos)
+        quiz.remove_question(question_id, question_pos)
         self.assertEqual(len(quiz.questions.all()), 0)
 
     def test_get_score(self):
@@ -70,3 +72,20 @@ class QuizTest(TestCase):
             quiz.add_question(question, answers, answer)
         #test answer
         self.assertEqual(quiz.total_questions, random_int_in_range_10)
+
+    def test_ordinal_rebalancing(self):
+        quiz = Quiz.object.create()
+        remove_question = None
+        for i in range(4):
+            question = random_sentence(random_num_int(1)%7+1)
+            answers = [random_sentence(random_num_int(1)%7+1), random_sentence(random_num_int(1)%7+1), random_sentence(random_num_int(1)%7+1), random_sentence(random_num_int(1)%7+1)]
+            answer = random_num_int(1)%4+1
+            question = quiz.add_question(question, answers, answer)
+            if i == 2:
+                remove_question = question.pk
+        quiz.rebalance_question_ordinals()
+        for e, i in enumerate(quiz.questions.all().order_by('ordinal')):
+            self.assertEqual(i.ordinal, e)
+
+    def remove_answer_from_question(self):
+        pass
